@@ -25,43 +25,43 @@ def main():
     # Process red wine data
     red_data = pd.read_csv("winequality-red.csv")
     features, target = process_wine_data(red_data)
-    params = {'C': 5.3366992312063068, 'epsilon': 0.36363636363636365, 'gamma': 0.01}
+    params = {'C': 5.3366992312063068, 'epsilon': 0.18181818181818182, 'gamma': 0.01}
     data["red-unscaled"] = (features, target, params)
     scaler.fit(features)
     features = scaler.transform(features) # Scale features to be similar
-    params = {'C': 15.199110829529332, 'epsilon': 0.18181818181818182, 'gamma': 0.23101297000831592}
+    params = {'C': 0.65793322465756787, 'epsilon': 0.0, 'gamma': 5.3366992312063068}
     data["red-max-abs-scaled"] = (features, target, params)
 
     # Process white wine data
     white_data = pd.read_csv("winequality-white.csv", sep=';')
     features, target = process_wine_data(white_data)
-    params = {'C': 0.65793322465756787, 'epsilon': 0.54545454545454541, 'gamma': 0.01}
+    params = {'C': 0.01, 'epsilon': 2.0, 'gamma': 0.01}
     data["white-unscaled"] = (features, target, params)
     scaler.fit(features)
     features = scaler.transform(features) # Scale features to be similar
-    params = {'C': 0.65793322465756787, 'epsilon': 0.72727272727272729, 'gamma': 5.3366992312063068}
+    params = {'C': 0.65793322465756787, 'epsilon': 0.90909090909090917, 'gamma': 5.3366992312063068}
     data["white-max-abs-scaled"] = (features, target, params)
 
     # Combine and process both wine data
     combined_data = pd.concat([red_data, white_data])
     combined_data = shuffle(combined_data)
     features, target = process_wine_data(combined_data)
-    params = {'C': 1.873817422860383, 'epsilon': 0.54545454545454541, 'gamma': 0.01}
+    params = {'C': 1.873817422860383, 'epsilon': 0.0, 'gamma': 0.23101297000831592}
     data["combined-unscaled"] = (features, target, params)
     scaler.fit(features)
     features = scaler.transform(features) # Scale features to be similar
-    params = {'C': 1.873817422860383, 'epsilon': 0.18181818181818182, 'gamma': 123.28467394420659}
+    params = {'C': 1.873817422860383, 'epsilon': 0.0, 'gamma': 123.28467394420659}
     data["combined-max-abs-scaled"] = (features, target, params)
 
-    for key in data:
-        print(key)
-        print(data[key][0])
-        print(data[key][1])
-        print(data[key][2])
+    # for key in data:
+    #     print(key)
+    #     print(data[key][0])
+    #     print(data[key][1])
+    #     print(data[key][2])
 
-    # parameter_test(data)
+    parameter_test(data)
 
-    quality_prediction(data)
+    # quality_prediction(data)
 
     # features, target = load_wine(return_X_y=True)
     # scaler = StandardScaler()
@@ -78,11 +78,6 @@ def main():
     # prediction = clf.predict(x_test)
 
     # print(metrics.accuracy_score(y_test, prediction))
-    # data = pd.read_csv("winequality-red.csv")
-    # MaxAbsScaler()
-    # naive_quality_prediction(data)
-    # data = pd.read_csv("winequality-white.csv", sep=';')
-    # naive_quality_prediction(data)
 
 def parameter_test(data):
     """Test."""
@@ -90,7 +85,8 @@ def parameter_test(data):
         features = data[key][0]
         target = data[key][1]
         print(key)
-        print(best_SVR_parameters((features, target)))
+        print(best_SVR_parameters2((features, target)))
+        # print(best_SVR_parameters((features, target)))
 
 def quality_prediction(data):
     """Outputs the mean absolute error and the confusion matrix"""    
@@ -145,6 +141,27 @@ def best_SVR_parameters(data):
     print("Time: " + str(time.time() - start))
     return grid.best_params_
 
+
+def best_SVR_parameters2(data):
+    """Returns best parameters for SVR."""
+    features = data[0]
+    target = data[1]
+
+
+    estimator = SVR(max_iter=1000, kernel='rbf')
+
+    dynamic_C_range = np.logspace(-10, 8, 12, base=2)
+    dynamic_gamma_range = np.logspace(-10, 8, 12, base=2)
+    dynamic_epsilon_range = np.linspace(0, 1, 12)
+    param_grid = dict(C=dynamic_C_range, epsilon=dynamic_epsilon_range, gamma=dynamic_gamma_range)
+    weights = get_sample_weights(target)
+
+    grid = GridSearchCV(estimator, param_grid=param_grid, n_jobs=4, scoring='neg_mean_absolute_error')
+    start = time.time()
+    grid.fit(features, target, sample_weight=weights)
+    print("Time: " + str(time.time() - start))
+    return grid.best_params_
+
 def average_confusion(confusion_results):
     """confusion"""
     mean = np.zeros_like(confusion_results[0])
@@ -160,6 +177,10 @@ def process_wine_data(data):
     features = data.loc[:, "fixed acidity":"alcohol"].as_matrix()
     target = data.loc[:, "quality"].as_matrix()
     return features, target
+
+def get_sample_weights(target):
+    weight = np.absolute(target - 6) + 1
+    return np.power(weight, 2)
 
 ### Taken from scikit-learn.org confusion matrix example
 def plot_confusion_matrix(cm, classes,
