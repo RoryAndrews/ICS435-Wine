@@ -46,3 +46,57 @@ Time: 1471.7764542102814
 combined-max-abs-scaled
 Time: 676.4065270423889
 {'C': 1.873817422860383, 'epsilon': 0.0, 'gamma': 123.28467394420659}
+
+RESULT 3
+np.power(weight, 2)
+weight = np.absolute(target - 6) + 1
+dynamic_C_range = np.logspace(-10, 8, 12, base=2)
+dynamic_gamma_range = np.logspace(-10, 8, 12, base=2)
+dynamic_epsilon_range = np.linspace(0, 1, 12)
+
+red-unscaled
+Time: 203.782874584198
+{'C': 8.5203287155197067, 'epsilon': 0.090909090909090912, 'gamma': 0.0009765625}
+red-max-abs-scaled
+Time: 114.34368968009949
+{'C': 0.091217506605090412, 'epsilon': 0.63636363636363635, 'gamma': 2.7407019694402481}
+white-unscaled
+Time: 1286.096441268921
+{'C': 0.0009765625, 'epsilon': 1.0, 'gamma': 0.2835781305488656}
+white-max-abs-scaled
+Time: 631.336118221283
+{'C': 0.009438198784409749, 'epsilon': 0.72727272727272729, 'gamma': 8.5203287155197067}
+combined-unscaled
+Time: 1943.2189280986786
+{'C': 2.7407019694402481, 'epsilon': 0.0, 'gamma': 0.2835781305488656}
+combined-max-abs-scaled
+Time: 896.5029311180115
+{'C': 8.5203287155197067, 'epsilon': 0.0, 'gamma': 256.0}
+
+RESULT 4
+
+dynamic_C_range = np.logspace(-10, 8, 10, base=2)
+dynamic_gamma_range = np.logspace(-10, 8, 10, base=2)
+dynamic_epsilon_range = np.linspace(0, 1, 10)
+weight = np.absolute(target - 6) + 1
+return np.power(weight, 2)
+grid = GridSearchCV(estimator, param_grid=param_grid, n_jobs=4, scoring='neg_mean_squared_error')
+
+red-unscaled
+Time: 120.76232886314392
+{'C': 16.0, 'epsilon': 0.77777777777777768, 'gamma': 0.0009765625}
+red-max-abs-scaled
+Time: 67.95985102653503
+{'C': 0.0625, 'epsilon': 0.66666666666666663, 'gamma': 4.0}
+white-unscaled
+Time: 746.6409816741943
+{'C': 0.25, 'epsilon': 0.88888888888888884, 'gamma': 0.0009765625}
+white-max-abs-scaled
+Time: 371.47545623779297
+{'C': 0.015625, 'epsilon': 0.77777777777777768, 'gamma': 4.0}
+combined-unscaled
+Time: 1104.0536422729492
+{'C': 1.0, 'epsilon': 0.22222222222222221, 'gamma': 0.25}
+combined-max-abs-scaled
+Time: 522.2760200500488
+{'C': 4.0, 'epsilon': 0.1111111111111111, 'gamma': 256.0}
