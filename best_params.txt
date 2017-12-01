@@ -1,0 +1,37 @@
+estimator = SVR(max_iter=1000, kernel='rbf')
+
+dynamic_C_range = np.logspace(-2, 3, 15)
+dynamic_gamma_range = np.logspace(-2, 3, 15)
+dynamic_epsilon_range = np.linspace(0, 2, 15)
+
+Red before scaling:
+{'C': 7.1968567300115209, 'epsilon': 0.2857142857142857, 'gamma': 0.01}
+Red after scaling:
+{'C': 84.83428982440725, 'epsilon': 0.2857142857142857, 'gamma': 0.11787686347935872}
+White before scaling:
+{'C': 0.61054022965853294, 'epsilon': 0.5714285714285714, 'gamma': 0.01}
+White after scaling:
+{'C': 1.3894954943731375, 'epsilon': 0.42857142857142855, 'gamma': 3.1622776601683795}
+
+dynamic_C_range = np.logspace(-2, 3, 12)
+dynamic_gamma_range = np.logspace(-2, 3, 12)
+dynamic_epsilon_range = np.linspace(0, 2, 12)
+
+red-unscaled
+Time: 139.6346549987793
+{'C': 5.3366992312063068, 'epsilon': 0.36363636363636365, 'gamma': 0.01}
+red-max-abs-scaled
+Time: 74.9622220993042
+{'C': 15.199110829529332, 'epsilon': 0.18181818181818182, 'gamma': 0.23101297000831592}
+white-unscaled
+Time: 975.4576256275177
+{'C': 0.65793322465756787, 'epsilon': 0.54545454545454541, 'gamma': 0.01}
+white-max-abs-scaled
+Time: 476.50663566589355
+{'C': 0.65793322465756787, 'epsilon': 0.72727272727272729, 'gamma': 5.3366992312063068}
+combined-unscaled
+Time: 1513.8384783267975
+{'C': 1.873817422860383, 'epsilon': 0.54545454545454541, 'gamma': 0.01}
+combined-max-abs-scaled
+Time: 718.5402157306671
+{'C': 1.873817422860383, 'epsilon': 0.18181818181818182, 'gamma': 123.28467394420659}
