@@ -26,8 +26,8 @@ def main():
     test = {'training' : None, 'testing' : None, 'param_grid' : None, 'scorer' : None}
 
     param_grid = {'C': 0, # Later this gets set based on data.
-                  'epsilon': np.linspace(0, 5, 32),
-                  'gamma': np.logspace(-10, 9, 32, base=2)}
+                  'epsilon': np.linspace(0, 2, 32),
+                  'gamma': np.logspace(-10, 8, 32, base=2)}
 
     # Process red wine data
     red_data = pd.read_csv("winequality-red.csv")
@@ -35,33 +35,35 @@ def main():
     param_grid['C'] = [best_C_parameter(target)]
     test = {**test, **samples}
     test['param_grid'] = param_grid
-    test['scorer'] = metrics.make_scorer(accuracy_score, tolerance=1.5)
+    test['scorer'] = metrics.make_scorer(my_score, tolerance=1.5)
     data["red-max-abs-scaled"] = test
-    # training, testing, _ = process_wine_data(red_data)
-    # test['training'] = training
-    # test['testing'] = testing
-    # data["red-unscaled"] = test
+    samples, _ = process_wine_data(red_data)
+    test = {**test, **samples}
+    data["red-unscaled"] = test
 
     # Process white wine data
     white_data = pd.read_csv("winequality-white.csv", sep=';')
-    samples, target = process_wine_data(red_data, scaler=scaler)
+    samples, target = process_wine_data(white_data, scaler=scaler)
     param_grid['C'] = [best_C_parameter(target)]
     test = {**test, **samples}
     test['param_grid'] = param_grid
     data["white-max-abs-scaled"] = test
-    # training, testing, _ = process_wine_data(red_data)
-    # test['training'] = training
-    # test['testing'] = testing
-    # data["white-unscaled"] = test
+    samples, _ = process_wine_data(white_data)
+    test = {**test, **samples}
+    data["white-unscaled"] = test
 
-    # # Combine and process both wine data
-    # combined_data = pd.concat([red_data, white_data])
-    # combined_data = shuffle(combined_data)
-    # features, target = process_wine_data(combined_data)
-    # data["combined-unscaled"] = (features, target)
-    # scaler.fit(features)
-    # features = scaler.transform(features) # Scale features to be similar
-    # data["combined-max-abs-scaled"] = (features, target)
+    # Combine and process both wine data
+    combined_data = pd.concat([red_data, white_data])
+    combined_data = shuffle(combined_data)
+    samples, target = process_wine_data(combined_data, scaler=scaler)
+    test = {**test, **samples}
+    param_grid['C'] = [best_C_parameter(target)]
+    test['param_grid'] = param_grid
+    data["combined-max-abs-scaled"] = test
+    samples, _ = process_wine_data(combined_data)
+    test = {**test, **samples}
+    data["combined-unscaled"] = test
+
     # showData(data)
     data = parameter_test(data)
     quality_prediction(data)
@@ -70,6 +72,7 @@ def main():
 def parameter_test(data):
     """Calls best_SVR_parameters() on each data."""
     for key in data:
+        print(key)
         data[key]['bestparams'] = best_SVR_parameters(data[key])
 
     return data
@@ -80,7 +83,9 @@ def best_SVR_parameters(data):
     estimator = SVR(max_iter=50000, kernel='rbf')
     grid = GridSearchCV(estimator, param_grid=data['param_grid'], scoring=data['scorer'], n_jobs=4)
     start = time.time()
-    grid.fit(data['training']['x'], data['training']['y'])
+    grid.fit(data['training']['x'],
+             data['training']['y'],
+             sample_weight=get_sample_weights(data['training']['y']))
     print("Time: " + str(time.time() - start))
     print("Best Parameters: " + str(grid.best_params_))
     print("Score: " + str(grid.best_score_))
@@ -92,19 +97,21 @@ def quality_prediction(data):
         train = data[key]['training']
         best_params = data[key]['bestparams']
         estimator = SVR(**best_params, kernel='rbf')
-        estimator.fit(train['x'], train['y'])
+        estimator.fit(train['x'], train['y'], sample_weight=get_sample_weights(train['y']))
 
         test = data[key]['testing']
         prediction = estimator.predict(test['x'])
 
         mae = metrics.mean_absolute_error(test['y'], prediction)
-        tolerance = 0.5
+        tolerance = 1
         t_pred = tolerance_prediction(test['y'], prediction, tolerance)
         conf = metrics.confusion_matrix(test['y'], t_pred, labels=range(3,10))
 
+        accuracy = str(my_score(test['y'], prediction, tolerance=1))
         mae_str = str(mae)
         print(key)
-        print('mean absolute error = ' + mae_str)
+        print('mean absolute error: ' + mae_str)
+        print('score: ' + accuracy)
         plt.clf()
         plot_confusion_matrix(conf, range(3,10), normalize=False,
                               title=key + '\nmean absolute error = ' + mae_str)
@@ -113,6 +120,7 @@ def quality_prediction(data):
         plot_confusion_matrix(conf, range(3,10), normalize=True,
                               title=key + '\nmean absolute error = ' + mae_str)
         plt.savefig(key + "-cmnorm", dpi=150)
+        plt.clf()
 
 def process_wine_data(data, testsize=0.30, scaler=None):
     """Returns features and target of wine data."""
@@ -146,13 +154,13 @@ def tolerance_prediction(y_values, predictions, tolerance = 0.5):
 
     return result
 
-def accuracy_score(y_values, predictions, tolerance = 1):
+def my_score(y_values, predictions, tolerance = 1):
     result = list()
     t_predictions = tolerance_prediction(y_values, predictions, tolerance)
     conf = metrics.confusion_matrix(y_values, t_predictions)
     for row, _i in zip(conf, range(conf.shape[0])):
         for _j in range(conf.shape[0]):
-            result.append(row[_i] / np.sum(row))
+            result.append(np.nan_to_num(row[_i] / np.sum(row)))
 
     return np.mean(result)
 
@@ -166,7 +174,7 @@ def plot_confusion_matrix(cm, classes,
     Normalization can be applied by setting `normalize=True`.
     """
     if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        cm = np.nan_to_num(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis])
         print("Normalized confusion matrix")
     else:
         print('Confusion matrix, without normalization')
@@ -191,10 +199,6 @@ def plot_confusion_matrix(cm, classes,
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
 
-def get_sample_weights(target):
-    weight = np.absolute(target - 6) + 1
-    return np.power(weight * 3, 2)
-
 def showData(data, indent=0):
     """Displays structure of data."""
     print()
@@ -204,6 +208,11 @@ def showData(data, indent=0):
                 print("\t", end="")
             print(key + " ", end="")
             showData(data[key], indent=indent + 1)
+
+def get_sample_weights(target):
+    weight = np.absolute(target - 6) + 1
+    # return np.power(weight * 4, 2)
+    return None
 
 if __name__ == '__main__':
     main()
