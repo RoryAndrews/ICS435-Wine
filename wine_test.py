@@ -25,32 +25,32 @@ def main():
     # Process red wine data
     red_data = pd.read_csv("winequality-red.csv")
     features, target = process_wine_data(red_data)
-    params = {'C': 16.0, 'epsilon': 0.77777777777777768, 'gamma': 0.0009765625}
+    params = {'C': 1.0, 'epsilon': 0.1111111111111111, 'gamma': 0.0009765625}
     data["red-unscaled"] = (features, target, params)
     scaler.fit(features)
     features = scaler.transform(features) # Scale features to be similar
-    params = {'C': 0.0625, 'epsilon': 0.66666666666666663, 'gamma': 4.0}
+    params = {'C': 0.015625, 'epsilon': 0.88888888888888884, 'gamma': 1.0}
     data["red-max-abs-scaled"] = (features, target, params)
 
     # Process white wine data
     white_data = pd.read_csv("winequality-white.csv", sep=';')
     features, target = process_wine_data(white_data)
-    params = {'C': 0.25, 'epsilon': 0.88888888888888884, 'gamma': 0.0009765625}
+    params = {'C': 0.015625, 'epsilon': 0.77777777777777768, 'gamma': 0.0009765625}
     data["white-unscaled"] = (features, target, params)
     scaler.fit(features)
     features = scaler.transform(features) # Scale features to be similar
-    params = {'C': 0.015625, 'epsilon': 0.77777777777777768, 'gamma': 4.0}
+    params = {'C': 0.0009765625, 'epsilon': 0.55555555555555558, 'gamma': 4.0}
     data["white-max-abs-scaled"] = (features, target, params)
 
     # Combine and process both wine data
     combined_data = pd.concat([red_data, white_data])
     combined_data = shuffle(combined_data)
     features, target = process_wine_data(combined_data)
-    params = {'C': 1.0, 'epsilon': 0.22222222222222221, 'gamma': 0.25}
+    params = {'C': 0.0625, 'epsilon': 0.22222222222222221, 'gamma': 0.25}
     data["combined-unscaled"] = (features, target, params)
     scaler.fit(features)
     features = scaler.transform(features) # Scale features to be similar
-    params = {'C': 4.0, 'epsilon': 0.1111111111111111, 'gamma': 256.0}
+    params = {'C': 16.0, 'epsilon': 0.22222222222222221, 'gamma': 256.0}
     data["combined-max-abs-scaled"] = (features, target, params)
 
     # for key in data:
@@ -59,9 +59,9 @@ def main():
     #     print(data[key][1])
     #     print(data[key][2])
 
-    parameter_test(data)
+    # parameter_test(data)
 
-    # quality_prediction(data)
+    quality_prediction(data)
 
     # features, target = load_wine(return_X_y=True)
     # scaler = StandardScaler()

@@ -100,3 +100,30 @@ Time: 1104.0536422729492
 combined-max-abs-scaled
 Time: 522.2760200500488
 {'C': 4.0, 'epsilon': 0.1111111111111111, 'gamma': 256.0}
+
+RESULT 5
+dynamic_C_range = np.logspace(-10, 8, 10, base=2)
+dynamic_gamma_range = np.logspace(-10, 8, 10, base=2)
+dynamic_epsilon_range = np.linspace(0, 1, 10)
+weight = np.absolute(target - 6) + 1
+np.power(weight * 3, 2)
+grid = GridSearchCV(estimator, param_grid=param_grid, n_jobs=4, scoring='neg_mean_squared_error')
+
+red-unscaled
+Time: 116.82374548912048
+{'C': 1.0, 'epsilon': 0.1111111111111111, 'gamma': 0.0009765625}
+red-max-abs-scaled
+Time: 67.79240489006042
+{'C': 0.015625, 'epsilon': 0.88888888888888884, 'gamma': 1.0}
+white-unscaled
+Time: 715.3977501392365
+{'C': 0.015625, 'epsilon': 0.77777777777777768, 'gamma': 0.0009765625}
+white-max-abs-scaled
+Time: 343.98901534080505
+{'C': 0.0009765625, 'epsilon': 0.55555555555555558, 'gamma': 4.0}
+combined-unscaled
+Time: 1069.4940795898438
+{'C': 0.0625, 'epsilon': 0.22222222222222221, 'gamma': 0.25}
+combined-max-abs-scaled
+Time: 495.6172378063202
+{'C': 16.0, 'epsilon': 0.22222222222222221, 'gamma': 256.0}
